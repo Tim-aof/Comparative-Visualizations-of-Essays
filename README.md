@@ -1,5 +1,5 @@
 # Comparative-Visualizations-of-Essays
-Provide a more objective basis for evaluation of AES scored essays.
+The application provided in this repository aims for a more objective basis for evaluation of AES scored essays. This README will also be available in the folder after you pulled it. Simply follow the instructions in order to start the application.
 
 Thank you for your interest in this work!
 
