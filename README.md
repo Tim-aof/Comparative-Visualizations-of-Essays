@@ -13,6 +13,7 @@ The Python version 3.7.4 is used at this point. You can get it here:
 https://www.python.org/downloads/release/python-374/
 
 Personally, I use the "Windows x86-64 executable installer", which should work for most people. But be aware that if your CPU does not support 64-bit or you have an Apple computer, then you have to choose the appropriate installer file. After the download, simply follow the installation instruction. Make sure to install "pip" by clicking on the check box provided. This is the package installer for Python and set the environment variable in order for Python to work properly. You have to do this BEFORE installation in the setup. Additionally, after the installation before closing the setup you should click "Disable the path length limit". After this you can close the setup. 
+
 ----------------------------------------------------------------------------------------------------------------------------------------
 2. Install packages
 
@@ -25,6 +26,7 @@ display the appropriate message if the installation was successful. After that, 
 
 - pip install bokeh
 - pip install pandas
+
 ----------------------------------------------------------------------------------------------------------------------------------------
 3. Starting the Application
 
