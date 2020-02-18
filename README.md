@@ -24,8 +24,8 @@ In order for Bokeh to work properly additional packages will be installed when c
 Therefore it could take some time before the installation is done. You will see a progress bar and the command prompt will 
 display the appropriate message if the installation was successful. After that, install the pandas package the same way.
 
-- pip install bokeh
-- pip install pandas
+> pip install bokeh
+> pip install pandas
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 3. Starting the Application
@@ -36,9 +36,24 @@ IMPORTANT:
 At this point make sure you run the command prompt from the application folder! Otherwise it will not be able to
 find the application. Switch to the folder with the command:
 
-- cd \filepath
+> cd \filepath
 
 You can also open the folder manually and then press Shift + right mouse button (into some empty space not on a file!) 
 to open the context menu. This way you will find a new in the context menu called "Open PowerShell window here" or similar.
 This depends of course on the language of the operating system. If you are running your system on German
-the point will also be written in German language.
+the point will also be written in German language. If you are in the appropiate folder type one of the following commands into the
+command prompt:
+
+> bokeh serve --show main.py
+> python main.py
+
+Info: The second command would not start the application by default. It only works since the first command is embedded into the source code.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Infomation:
+
+If you are closing the application and want to start it again make sure to close the command prompt as well. As long as the command prompt is running the port will be blocked even if the application itself is closed. In this case you will get the following error:
+
+> Cannot start Bokeh server, port 5006 is already in use
+
