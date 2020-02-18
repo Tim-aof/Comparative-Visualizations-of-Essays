@@ -1,14 +1,15 @@
 from bokeh.server.server import Server
 from bokeh.plotting import figure, output_file, ColumnDataSource
-from bokeh.models import Segment, Circle, HoverTool, RangeSlider, Select, TextInput, Button, TableColumn, DataTable, Panel, Tabs, Legend, LegendItem, TextInput, Dropdown, FileInput, TextAreaInput, Whisker
+from bokeh.models import Segment, HoverTool, RangeSlider, Select, TextInput, Button, TableColumn, DataTable, Panel, Tabs, Legend, LegendItem, TextInput, Dropdown, FileInput, TextAreaInput, Whisker
 from bokeh.models.widgets import Div
 from bokeh.models.glyphs import Segment
-from bokeh.layouts import row, column, layout, widgetbox, gridplot
+from bokeh.layouts import row, column, layout, widgetbox
 from bokeh.io import curdoc, output_file, save
 from bokeh.embed import file_html
 from bokeh.transform import linear_cmap, cumsum
 from bokeh.palettes import Category20c
 from bokeh.command.bootstrap import main
+from flask import Flask
 
 import pandas as pd
 import os.path
@@ -16,6 +17,7 @@ import numpy as np
 
 from math import pi
 # ------------------------------------------------------------------------------
+app = Flask(__name__)
 
 # Read featureFileAsap1.tsv file as a DataFrame object
 df = pd.read_csv('featureFileAsap1.tsv', sep='\t')
@@ -31,15 +33,6 @@ desc = Div(text="""
         <p>ESANVis is a browser based application to compare different essays with each other. The aim is to visually represent the essays evaluated by scoring algorithms in order to enable a new level of analysis.</p>
     </div>
 """, sizing_mode='stretch_width')
-# ------------------------------------------------------------------------------
-
-# Create description in order to let the user understand what the
-# input field is meant to do.
-desc_inp = Div(text="""
-    <div>
-        <p>Enter the ID of the desired essays into the input field below. This will update the pie chart and the text box to the right with the appropriate information.</p>
-    </div>
-""")
 # ------------------------------------------------------------------------------
 
 # Create ColumnDataSource from dataframe
@@ -116,7 +109,7 @@ head_columns = {
     'Outcome': 'outcome'
 }
 # ------------------------------------------------------------------------------
-
+@app.route('/')
 # Function for creating the main plot
 def create_plot():
 
@@ -172,7 +165,6 @@ def create_plot():
     # their outcome
     colours = ['red', 'orange', 'green']
     mapper = linear_cmap(field_name=head_columns['Outcome'], palette=colours, low=0.0, high=12.0)
-
 
     # If-statements which takes the value of the y-axis selection widget and uses
     #  it to provide the right plot type to the figure
@@ -230,17 +222,6 @@ def create_plot():
             y=area2[y_axis],
             color='orange'
         )
-
-    # Tried to implement a legend for the scatter and vbar plot. Had to stop after several
-    # attempts, since it already costed too much time. It has something to do with
-    # the renderer. I must be missing something which is important in order to
-    # let the legend work. It should show the colour-coding to the user.
-    # legend = Legend(items=[
-    #     LegendItem(label='outcome <= 4', renderers=[p.renderers[0]]),
-    #     LegendItem(label='outcome 5 - 8', renderers=[p.renderers[0]]),
-    #     LegendItem(label='outcome >= 9', renderers=[p.renderers[0]])
-    # ])
-    # p.add_layout = legend
 
     # Create tooltips with HTML and add them to the plot
     if sel_plot.value == 'scatter' or sel_plot.value == 'vbar':
@@ -357,7 +338,7 @@ def change_file(attr, old, new):
     dft = pd.read_csv(str(add_row.filename), sep='\t')
 
     # Convert the data into a DataFrame object
-    newrows = dft
+    # newrows = dft.DataFrame()
 
     # Use stream method to update the source with the new data
     source.stream(dft)
@@ -399,9 +380,9 @@ def create_boxplot():
     # Add glyphs. Since there is no specific boxplot glyph provided by the Bokeh module,
     # it is built from scratch by a couple of individual glyphs.
     p.segment(
-        x0=lower,
+        x0=mins,
         y0=column_list,
-        x1=upper,
+        x1=maxs,
         y1=column_list,
         line_color='black'
     )
@@ -424,7 +405,7 @@ def create_boxplot():
     )
 
     p.rect(
-        x=lower,
+        x=mins,
         y=column_list,
         width=0.01,
         height=0.4,
@@ -432,7 +413,7 @@ def create_boxplot():
         color='black'
     )
     p.rect(
-        x=upper,
+        x=maxs,
         y=column_list,
         width=0.01,
         height=0.4,
@@ -570,7 +551,7 @@ widget = widgetbox(children=[num_tokens, sel_yaxis, sel_xaxis, sel_plot, add_row
 # ------------------------------------------------------------------------------
 
 # Create widgetbox for individual analysis
-widget1 = widgetbox(children=[desc_inp, inp_id])
+widget1 = widgetbox(children=[inp_id])
 # ------------------------------------------------------------------------------
 
 # Safe plot to Initiate it within layout variable
@@ -583,13 +564,6 @@ box = create_boxplot()
 l = row(desc)
 layout = row(widget, plot, box)
 indv = row(widget1, pie, sh_ess)
-
-# With the gridplot function below was tried to represent each plot on a separate canvas
-# to increase the applications readability but using this function makes the plots
-# and widgets not interaction with each other.
-# l = gridplot(children=[desc])
-# layout = gridplot(children=[[widget],[plot, box]])
-# indv = gridplot(children=[[widget1, pie, sh_ess]])
 # ------------------------------------------------------------------------------
 
 # Add layout to output document
