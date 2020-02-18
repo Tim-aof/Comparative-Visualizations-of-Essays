@@ -9,6 +9,7 @@ from bokeh.embed import file_html
 from bokeh.transform import linear_cmap, cumsum
 from bokeh.palettes import Category20c
 from bokeh.command.bootstrap import main
+from flask import Flask
 
 import pandas as pd
 import os.path
@@ -16,6 +17,7 @@ import numpy as np
 
 from math import pi
 # ------------------------------------------------------------------------------
+app = Flask(__name__)
 
 # Read featureFileAsap1.tsv file as a DataFrame object
 df = pd.read_csv('featureFileAsap1.tsv', sep='\t')
@@ -107,7 +109,7 @@ head_columns = {
     'Outcome': 'outcome'
 }
 # ------------------------------------------------------------------------------
-
+@app.route('/')
 # Function for creating the main plot
 def create_plot():
 
