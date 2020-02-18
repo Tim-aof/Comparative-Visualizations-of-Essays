@@ -59,3 +59,4 @@ If you are closing the application and want to start it again make sure to close
 
 > Cannot start Bokeh server, port 5006 is already in use
 
+Also, please use the main.py which is directly located in the main folder. There are others in subfolders too, but these were mainly for testing purposes.
