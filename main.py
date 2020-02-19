@@ -337,13 +337,74 @@ def create_pie():
         source=data
     )
 
+
+    # The following code is not working properly right now. Nevertheless, it was not removed
+    # since it does not throw any error. It creates a vertical bar plot which should
+    # count the ten most used words of an essay and show it within the tab. The error
+    # could not been found in the remaining time. But a look into the command line shows
+    # that the selected essay get split and count in the correct way but unfortunately,
+    # the plot does not grab the values.
+    c = figure(
+        plot_height=600,
+        plot_width=800,
+        title='10 most used words',
+        toolbar_location=None,
+        x_range=(-0.5, 1.0)
+    )
+
+    essay_insert = df_essay.set_index('essay_id').to_dict('index')
+    text_key = essay_insert[int(inp_id.value)]
+
+    # Save words with counter in this dictionary
+    count_top = {}
+
+    # Count number of words and update it to the dictionary above
+    # words are used as a key while the word count is set as the value
+    for i in text_key['essay'].split():
+        score = 0
+        for j in text_key['essay'].split():
+            if j == i:
+                score += 1
+            count_top.update({i: score})
+
+    # Print the dictionary for testing
+    print(count_top)
+
+    # Append the top ten words, respectively top ten values, to the arrays below.
+    test = []
+    val = []
+    counter = 0
+    for i in sorted(count_top, key=count_top.__getitem__):
+        test.append(i)
+        val.append(count_top[i])
+        counter += 1
+        if counter >= 10:
+            break
+
+    # Just anther try to access the top ten words and values.
+    # top_k = count_top.iloc[0,9].keys
+    # top_v = count_top.iloc[0,9].values
+
+    # Add vbar with the top ten words.
+    c.vbar(
+        x=test[0:9],
+        top=val,
+        width=0.8,
+        line_alpha=0.3,
+    )
+
     # Remove axes and background grid from the plot
     p.axis.axis_label = None
     p.axis.visible = False
     p.grid.grid_line_color = None
 
-    # Return the plot
-    return p
+    # Save plots into tabs
+    t1 = Panel(child=p, title='Pie')
+    t2 = Panel(child=c, title='Bar')
+    tabs = Tabs(tabs=[t1, t2])
+
+    # Return the plots
+    return tabs
 # ------------------------------------------------------------------------------
 
 # Function to instantiate a new data frame @todo
@@ -357,7 +418,7 @@ def change_file(attr, old, new):
     dft = pd.read_csv(str(add_row.filename), sep='\t')
 
     # Convert the data into a DataFrame object
-    newrows = dft
+    # newrows = dft.DataFrame()
 
     # Use stream method to update the source with the new data
     source.stream(dft)
@@ -392,16 +453,20 @@ def create_boxplot():
     q1 = df_boxplot.quantile(q=0.25)
     q2 = df_boxplot.quantile(q=0.5)
     q3 = df_boxplot.quantile(q=0.75)
-    iqr = q3 - q1
-    upper = q3 + 1.5*iqr
-    lower = q1 - 1.5*iqr
+
+    # Here it was tried to set the whisker 1.5 times from the edges of the boxes.
+    # It behaved strange, as far as I could see. Therefore I just stood with the
+    # minimum, respectively maximum, value.
+    # iqr = q3 - q1
+    # upper = q3 + 1.5*iqr
+    # lower = q1 - 1.5*iqr
 
     # Add glyphs. Since there is no specific boxplot glyph provided by the Bokeh module,
     # it is built from scratch by a couple of individual glyphs.
     p.segment(
-        x0=lower,
+        x0=mins,
         y0=column_list,
-        x1=upper,
+        x1=maxs,
         y1=column_list,
         line_color='black'
     )
@@ -424,7 +489,7 @@ def create_boxplot():
     )
 
     p.rect(
-        x=lower,
+        x=mins,
         y=column_list,
         width=0.01,
         height=0.4,
@@ -432,7 +497,7 @@ def create_boxplot():
         color='black'
     )
     p.rect(
-        x=upper,
+        x=maxs,
         y=column_list,
         width=0.01,
         height=0.4,
