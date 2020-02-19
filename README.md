@@ -25,6 +25,7 @@ Therefore it could take some time before the installation is done. You will see 
 display the appropriate message if the installation was successful. After that, install the pandas package the same way.
 
 > pip install bokeh
+
 > pip install pandas
 
 ----------------------------------------------------------------------------------------------------------------------------------------
@@ -45,6 +46,7 @@ the point will also be written in German language. If you are in the appropiate 
 command prompt:
 
 > bokeh serve --show main.py
+
 > python main.py
 
 Info: The second command would not start the application by default. It only works since the first command is embedded into the source code.
@@ -57,3 +59,4 @@ If you are closing the application and want to start it again make sure to close
 
 > Cannot start Bokeh server, port 5006 is already in use
 
+Also, please use the main.py which is directly located in the main folder. There are others in subfolders too, but these were mainly for testing purposes.

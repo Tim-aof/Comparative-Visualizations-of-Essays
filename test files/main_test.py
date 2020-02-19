@@ -1,14 +1,15 @@
 from bokeh.server.server import Server
 from bokeh.plotting import figure, output_file, ColumnDataSource
-from bokeh.models import Segment, Circle, HoverTool, RangeSlider, Select, TextInput, Button, TableColumn, DataTable, Panel, Tabs, Legend, LegendItem, TextInput, Dropdown, FileInput, TextAreaInput, Whisker
+from bokeh.models import Segment, HoverTool, RangeSlider, Select, TextInput, Button, TableColumn, DataTable, Panel, Tabs, Legend, LegendItem, TextInput, Dropdown, FileInput, TextAreaInput, Whisker
 from bokeh.models.widgets import Div
 from bokeh.models.glyphs import Segment
-from bokeh.layouts import row, column, layout, widgetbox, gridplot
+from bokeh.layouts import row, column, layout, widgetbox
 from bokeh.io import curdoc, output_file, save
 from bokeh.embed import file_html
 from bokeh.transform import linear_cmap, cumsum
 from bokeh.palettes import Category20c
 from bokeh.command.bootstrap import main
+from flask import Flask
 
 import pandas as pd
 import os.path
@@ -16,6 +17,7 @@ import numpy as np
 
 from math import pi
 # ------------------------------------------------------------------------------
+app = Flask(__name__)
 
 # Read featureFileAsap1.tsv file as a DataFrame object
 df = pd.read_csv('featureFileAsap1.tsv', sep='\t')
@@ -31,15 +33,6 @@ desc = Div(text="""
         <p>ESANVis is a browser based application to compare different essays with each other. The aim is to visually represent the essays evaluated by scoring algorithms in order to enable a new level of analysis.</p>
     </div>
 """, sizing_mode='stretch_width')
-# ------------------------------------------------------------------------------
-
-# Create description in order to let the user understand what the
-# input field is meant to do.
-desc_inp = Div(text="""
-    <div>
-        <p>Enter the ID of the desired essays into the input field below. This will update the pie chart and the text box to the right with the appropriate information.</p>
-    </div>
-""")
 # ------------------------------------------------------------------------------
 
 # Create ColumnDataSource from dataframe
@@ -116,7 +109,7 @@ head_columns = {
     'Outcome': 'outcome'
 }
 # ------------------------------------------------------------------------------
-
+@app.route('/')
 # Function for creating the main plot
 def create_plot():
 
@@ -172,7 +165,6 @@ def create_plot():
     # their outcome
     colours = ['red', 'orange', 'green']
     mapper = linear_cmap(field_name=head_columns['Outcome'], palette=colours, low=0.0, high=12.0)
-
 
     # If-statements which takes the value of the y-axis selection widget and uses
     #  it to provide the right plot type to the figure
@@ -230,17 +222,6 @@ def create_plot():
             y=area2[y_axis],
             color='orange'
         )
-
-    # Tried to implement a legend for the scatter and vbar plot. Had to stop after several
-    # attempts, since it already costed too much time. It has something to do with
-    # the renderer. I must be missing something which is important in order to
-    # let the legend work. It should show the colour-coding to the user.
-    # legend = Legend(items=[
-    #     LegendItem(label='outcome <= 4', renderers=[p.renderers[0]]),
-    #     LegendItem(label='outcome 5 - 8', renderers=[p.renderers[0]]),
-    #     LegendItem(label='outcome >= 9', renderers=[p.renderers[0]])
-    # ])
-    # p.add_layout = legend
 
     # Create tooltips with HTML and add them to the plot
     if sel_plot.value == 'scatter' or sel_plot.value == 'vbar':
@@ -337,74 +318,13 @@ def create_pie():
         source=data
     )
 
-
-    # The following code is not working properly right now. Nevertheless, it was not removed
-    # since it does not throw any error. It creates a vertical bar plot which should
-    # count the ten most used words of an essay and show it within the tab. The error
-    # could not been found in the remaining time. But a look into the command line shows
-    # that the selected essay get split and count in the correct way but unfortunately,
-    # the plot does not grab the values.
-    c = figure(
-        plot_height=600,
-        plot_width=800,
-        title='10 most used words',
-        toolbar_location=None,
-        x_range=(-0.5, 1.0)
-    )
-
-    essay_insert = df_essay.set_index('essay_id').to_dict('index')
-    text_key = essay_insert[int(inp_id.value)]
-
-    # Save words with counter in this dictionary
-    count_top = {}
-
-    # Count number of words and update it to the dictionary above
-    # words are used as a key while the word count is set as the value
-    for i in text_key['essay'].split():
-        score = 0
-        for j in text_key['essay'].split():
-            if j == i:
-                score += 1
-            count_top.update({i: score})
-
-    # Print the dictionary for testing
-    print(count_top)
-
-    # Append the top ten words, respectively top ten values, to the arrays below.
-    test = []
-    val = []
-    counter = 0
-    for i in sorted(count_top, key=count_top.__getitem__):
-        test.append(i)
-        val.append(count_top[i])
-        counter += 1
-        if counter >= 10:
-            break
-
-    # Just anther try to access the top ten words and values.
-    # top_k = count_top.iloc[0,9].keys
-    # top_v = count_top.iloc[0,9].values
-
-    # Add vbar with the top ten words.
-    c.vbar(
-        x=test[0:9],
-        top=val,
-        width=0.8,
-        line_alpha=0.3,
-    )
-
     # Remove axes and background grid from the plot
     p.axis.axis_label = None
     p.axis.visible = False
     p.grid.grid_line_color = None
 
-    # Save plots into tabs
-    t1 = Panel(child=p, title='Pie')
-    t2 = Panel(child=c, title='Bar')
-    tabs = Tabs(tabs=[t1, t2])
-
-    # Return the plots
-    return tabs
+    # Return the plot
+    return p
 # ------------------------------------------------------------------------------
 
 # Function to instantiate a new data frame @todo
@@ -453,13 +373,9 @@ def create_boxplot():
     q1 = df_boxplot.quantile(q=0.25)
     q2 = df_boxplot.quantile(q=0.5)
     q3 = df_boxplot.quantile(q=0.75)
-
-    # Here it was tried to set the whisker 1.5 times from the edges of the boxes.
-    # It behaved strange, as far as I could see. Therefore I just stood with the
-    # minimum, respectively maximum, value.
-    # iqr = q3 - q1
-    # upper = q3 + 1.5*iqr
-    # lower = q1 - 1.5*iqr
+    iqr = q3 - q1
+    upper = q3 + 1.5*iqr
+    lower = q1 - 1.5*iqr
 
     # Add glyphs. Since there is no specific boxplot glyph provided by the Bokeh module,
     # it is built from scratch by a couple of individual glyphs.
@@ -635,7 +551,7 @@ widget = widgetbox(children=[num_tokens, sel_yaxis, sel_xaxis, sel_plot, add_row
 # ------------------------------------------------------------------------------
 
 # Create widgetbox for individual analysis
-widget1 = widgetbox(children=[desc_inp, inp_id])
+widget1 = widgetbox(children=[inp_id])
 # ------------------------------------------------------------------------------
 
 # Safe plot to Initiate it within layout variable
@@ -648,13 +564,6 @@ box = create_boxplot()
 l = row(desc)
 layout = row(widget, plot, box)
 indv = row(widget1, pie, sh_ess)
-
-# With the gridplot function below was tried to represent each plot on a separate canvas
-# to increase the applications readability but using this function makes the plots
-# and widgets not interaction with each other.
-# l = gridplot(children=[desc])
-# layout = gridplot(children=[[widget],[plot, box]])
-# indv = gridplot(children=[[widget1, pie, sh_ess]])
 # ------------------------------------------------------------------------------
 
 # Add layout to output document
